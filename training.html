@@ -2794,9 +2794,10 @@ div.tocify {
 <div id="sobre-esta-notebook" class="section level2" number="1.1">
 <h2><span class="header-section-number">1.1</span> Sobre esta
 notebook</h2>
-<p>En esta notebook se introduce el uso de los datos de <a href="https://ranking.influscience.eu/estadisticas-y-datos/">InfluScience
-2</a>, incluyendo varios estudios de caso para facilitar el trabajo con
-este dataset.</p>
+<p>En esta notebook se introduce el uso de los datos de <a href="https://ranking.influscience.eu/">InfluScience 2</a>, incluyendo
+varios estudios de caso para facilitar el trabajo con este dataset. Los
+datos no están incluidos en el repositorio, por lo que para replicar
+esta notebook neceistas descargarlos de la <a href="https://ranking.influscience.eu/estadisticas-y-datos/">web</a>.</p>
 </div>
 <div id="sobre-los-datos" class="section level2" number="1.2">
 <h2><span class="header-section-number">1.2</span> Sobre los datos</h2>
@@ -2836,10 +2837,10 @@ library(treemapify)</code></pre>
 </div>
 <div id="lectura" class="section level1" number="3">
 <h1><span class="header-section-number">3</span> Lectura</h1>
-<p>Todos los archivos del dataset de <a href="https://ranking.influscience.eu/estadisticas-y-datos/">InfluScience
-2</a> están en formato delimitado por tabuladores, sin calificadores y
-con codificación UTF-8. Puedes importarlos rápidamente con
-<code>read.delim()</code>.</p>
+<p>Todos los archivos <a href="https://ranking.influscience.eu/estadisticas-y-datos/">del dataset
+de InfluScience 2</a> están en formato delimitado por tabuladores, sin
+calificadores y con codificación UTF-8. Puedes importarlos rápidamente
+con <code>read.delim()</code>.</p>
 <pre class="r"><code>df_pub &lt;- read.delim(&#39;data/1-Publicaciones.tsv&#39;,
                      quote = &#39;&#39;,
                      fileEncoding = &#39;UTF-8&#39;)

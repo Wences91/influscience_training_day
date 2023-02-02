@@ -21,7 +21,7 @@ options(scipen=10000)
 # Introducción
 ## Sobre esta notebook
 
-En esta notebook se introduce el uso de los datos de [InfluScience 2](https://ranking.influscience.eu/estadisticas-y-datos/), incluyendo varios estudios de caso para facilitar el trabajo con este dataset.
+En esta notebook se introduce el uso de los datos de [InfluScience 2](https://ranking.influscience.eu/), incluyendo varios estudios de caso para facilitar el trabajo con este dataset. Los datos no están incluidos en el repositorio, por lo que para replicar esta notebook neceistas descargarlos de la [web](https://ranking.influscience.eu/estadisticas-y-datos/).
 
 ## Sobre los datos
 
@@ -55,7 +55,7 @@ library(treemapify)
 
 # Lectura
 
-Todos los archivos del dataset de [InfluScience 2](https://ranking.influscience.eu/estadisticas-y-datos/) están en formato delimitado por tabuladores, sin calificadores y con codificación UTF-8. Puedes importarlos rápidamente con `read.delim()`.
+Todos los archivos [del dataset de InfluScience 2](https://ranking.influscience.eu/estadisticas-y-datos/) están en formato delimitado por tabuladores, sin calificadores y con codificación UTF-8. Puedes importarlos rápidamente con `read.delim()`.
 
 ```{r lectura}
 df_pub <- read.delim('data/1-Publicaciones.tsv',
