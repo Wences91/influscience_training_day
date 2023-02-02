@@ -1,0 +1,203 @@
+---
+title: "InfluScience Training Day"
+author: "Wenceslao Arroyo-Machado"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    css: style.css
+    toc: yes
+    toc_float: yes
+    number_sections: yes
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen=10000)
+```
+
+![](images/influscience.png)
+
+# Introducción
+## Sobre esta notebook
+
+En esta notebook se introduce el uso de los datos de [InfluScience 2](https://ranking.influscience.eu/estadisticas-y-datos/), incluyendo varios estudios de caso para facilitar el trabajo con este dataset.
+
+## Sobre los datos
+
+El dataset del ranking de InfluScience 2 está compuesto de 8 archivos delimitados por tabuladores:
+
+-   **1-Publicaciones.tsv** (*5750*x*11*) - Publicaciones con más InfluRatio por campo ESI
+
+-   **2-Autores.tsv** (*6550*x*15*) - Autores españoles con más InfluRatio por campo ESI
+
+-   **3-Publicaciones-Autores.tsv** (*157380*x*13*) - Publicaciones de los autores españoles con más InfluRatio por campo ESI
+
+-   **4-Org_master_list.tsv** (*163*x*6*) - Universidades y hospitales españoles por región
+
+-   **5-Org_indicators.tsv** (*3079*x*12*) - Indicadores altmétricos de las universidades y hospitales españoles por campo ESI
+
+-   **6-Publications_Org.tsv** (*24936*x*13*) - Publicaciones con más InfluRatio de las universidades y hospitales españoles por campo ESI
+
+-   **7-ODS_Indicators** (*16*x*10*) - Indicadores altmétricos de las publicaciones agrupadas por ODS
+
+-   **8-ODS_Selected_Papers.tsv** (*2805*x*13*) - Publicaciones con más InfluRatio por ODS y campo ESI
+
+# Paquetes
+
+Para este análisis de prueba solo necesitas usar los paquetes `dplyr` y `ggplot2`.
+
+```{r paquetes, warning=FALSE, message=FALSE}
+library(dplyr)
+library(ggplot2)
+library(treemapify)
+```
+
+# Lectura
+
+Todos los archivos del dataset de [InfluScience 2](https://ranking.influscience.eu/estadisticas-y-datos/) están en formato delimitado por tabuladores, sin calificadores y con codificación UTF-8. Puedes importarlos rápidamente con `read.delim()`.
+
+```{r lectura}
+df_pub <- read.delim('data/1-Publicaciones.tsv',
+                     quote = '',
+                     fileEncoding = 'UTF-8')
+head(df_pub)
+```
+
+# Casos prácticos
+
+## Indicadores de ODS
+
+En este primer ejemplo vamos usar los indicadores por ODS del archivo `7-ODS_Indicators.tsv`.
+
+```{r lectura_caso_1}
+df_ods <- read.delim('data/7-ODS_Indicators.tsv',
+                     quote = '',
+                     fileEncoding = 'UTF-8')
+
+head(df_ods)
+```
+
+Antes de usar este dataset, la variable de ODS es transformada en factor.
+
+```{r dataframe_1}
+df_ods$ods <- factor(df_ods$ods, sort(df_ods$ods), ordered=TRUE)
+```
+
+Mediante un treemap se representa el InfluRatio de los ODS, usando el color para indicar el total de menciones en informes.
+
+```{r dataframe_1_plot_1}
+ggplot(data=df_ods, aes(area=influratio, fill=total_po, label=ods)) +
+  geom_treemap() +
+  geom_treemap_text(colour='grey70', place='centre', fontface='italic', grow=TRUE) +
+  labs(x='', y='', fill='Menciones en informes') +
+  guides(fill=guide_colorbar(barwidth = 15, title.vjust = 0.75)) +
+  scale_fill_viridis_c(option = 'G') +
+  theme(legend.position='bottom')
+```
+
+## Indicadores altmetrics de instituciones
+
+En este caso vamos a unir los datos de las instituciones españolas con sus respectivos indicadores altmetrics usando los datasets `4-Org_master_list.tsv` y `5-Org_indicators.tsv`.
+
+```{r lectura_caso_2}
+df_org <- read.delim('data/4-Org_master_list.tsv',
+                     quote = '',
+                     fileEncoding = 'UTF-8')
+head(df_org)
+
+df_alt <- read.delim('data/5-Org_indicators.tsv',
+                     quote = '',
+                     fileEncoding = 'UTF-8')
+head(df_alt)
+```
+
+Mediante la columna `institution_id` ambos dataset son combinados y con este `dataframe` generamos diferentes visualizaciones.
+
+```{r dataframe_2}
+df_org_alt <- df_org %>%
+  inner_join(df_alt, by = 'institution_id')
+
+head(df_org_alt)
+```
+
+El siguiente gráfico se corresponde a los boxplots de menciones de Wikipedia de las instituciones diferenciando por tipo de universidad. Se utiliza el indicador global, sin diferenciar por tipo de campo.
+
+```{r dataframe_2_plot_1}
+ggplot(data=df_org_alt[which(df_org_alt$esi=='Global'),], aes(x='', y=total_wp, fill=organization_type)) +
+  geom_boxplot() +
+  labs(x='', y='Menciones de Wikipedia', fill='Color') +
+  theme(legend.position='bottom') +
+  facet_wrap(organization_type~., scales='free')
+```
+
+Ahora generamos los gráficos de densidad de las menciones de Twitter y Wikipedia de todas las instituciones por campo de conocimiento.
+
+```{r dataframe_2_plot_2, warning=FALSE}
+ggplot() +
+  geom_density(data=df_org_alt[which(df_org_alt$esi!='Global'),], aes(x=total_tw, fill='Twitter'), alpha=0.7) +
+  geom_density(data=df_org_alt[which(df_org_alt$esi!='Global'),], aes(x=total_wp, fill='Wikipedia'), alpha=0.7) +
+  scale_x_log10() +
+  scale_fill_manual(values=c('Twitter'='#2ac3e7', 'Wikipedia'='#dddddd')) +
+  labs(x='', y='', fill='Altmetric') +
+  theme(legend.position='bottom') +
+  facet_wrap(esi~., scales='free', nrow = 7)
+```
+
+Por último lugar, está el scatter plot de las instituciones con las menciones de noticias en el eje X, las menciones de informes en el eje Y, el número de publicaciones en el color de los puntos y el InfluRatio en el tamaño de los mismos.
+
+```{r dataframe_2_plot_3}
+ggplot() +
+  geom_point(data=df_org_alt[which(df_org_alt$esi=='Global'),], aes(x=total_nw, y=total_po, color=aas_publications, size=total_aas)) +
+  geom_text(data=df_org_alt[which(df_org_alt$esi=='Global' & df_org_alt$total_aas>150000),], aes(x=total_nw, y=total_po, label=acronym, size=total_aas), vjust=1, hjust=1) +
+  labs(x='Menciones de noticias', y='Menciones de informes', color='Publicaciones', size='InfluRatio') +
+  guides(color = guide_colorbar(barwidth = 10, title.vjust = 0.75)) +
+  theme(legend.position='bottom',
+        legend.box='vertical')
+```
+
+## Indicadores altmetrics de influsciencers andaluces
+
+Para este último caso vamos a emplear los datasets `2-Autores.tsv` y  `4-Org_master_list.tsv` (ya importado en el caso anterior).
+
+```{r lectura_caso_3}
+df_aut <- read.delim('data/2-Autores.tsv',
+                     quote = '',
+                     fileEncoding = 'UTF-8')
+head(df_aut)
+```
+
+Al combinar los autores con las instituciones algunos se pierden debido a que la normalización de instituciones se ha llevado a cabo a nivel de universidad y hospital.
+
+```{r dataframe_3}
+df_org_aut <- df_org %>%
+  inner_join(df_aut, by = c('name'='organization'))
+
+head(df_org_aut)
+```
+
+Mediante gráficos de boxplot se visualizan cuáles son los InfluSciencers de universidades andaluzas.
+
+```{r dataframe_3_plot_1}
+ggplot(data=df_org_aut[which(df_org_aut$region=='ANDALUCÍA' & df_org_aut$organization_type=='University' & df_org_aut$esi=='Global'),], aes(y=total_aas, x=city, fill=city)) +
+  geom_boxplot(alpha=0.6) +
+  geom_point() +
+  geom_text(data=df_org_aut[which(df_org_aut$region=='ANDALUCÍA' & df_org_aut$organization_type=='University' & df_org_aut$esi=='Global' & df_org_aut$total_aas>4000),], aes(y=total_aas, x=city, label=name.y), vjust=1, hjust=-0.05) +
+  labs(x='Ciudad', y='InfluRatio', color='') +
+  scale_fill_viridis_d(option='F') +
+  theme_minimal() +
+  theme(legend.position='none')
+```
+
+Por último, se repite el análisis anterior pero para cada campo de conocimiento.
+
+```{r dataframe_3_plot_2, fig.height=7}
+ggplot(data=df_org_aut[which(df_org_aut$region=='ANDALUCÍA' & df_org_aut$organization_type=='University' & df_org_aut$esi!='Global'),], aes(y=total_aas, x=city, fill=city)) +
+  geom_boxplot(alpha=0.6) +
+  labs(x='Ciudad', y='InfluRatio', fill='') +
+  scale_fill_viridis_d(option='F') +
+  guides(fill = guide_legend(nrow=1, label.theme=element_text(size=6))) +
+  theme(legend.position='top',
+        axis.text.x=element_blank()) +
+  facet_wrap(esi~., scales='free',  nrow=7)
+```
